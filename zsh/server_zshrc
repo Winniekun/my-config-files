@@ -75,7 +75,8 @@ plugins=(
 		zsh-syntax-highlighting 
 		zsh-autosuggestions
 		git-open
-		extract
+		autojump
+        extract
 	)
 
 source $ZSH/oh-my-zsh.sh
