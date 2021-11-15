@@ -1,0 +1,13 @@
+i[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+[Service]
+Type=simple
+Environment="PATH=/opt/jdk-11.0.12/bin:/opt/jdk-11.0.12/jre/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin"
+LimitNOFILE=1048576
+ExecStart=/usr/local/kafka/bin/kafka-server-start.sh /usr/local/kafka/config/server.properties
+ExecStop=/usr/local/kafka/bin/kafka-server-stop.sh
+Restart=Always
+[Install]
+WantedBy=multi-user.target
+
