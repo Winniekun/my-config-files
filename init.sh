@@ -101,7 +101,9 @@ base_config() {
     
     # vim/cur/wget配置
     echo -e "正在配置vim"
-    curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/vimrc >~/.vimrc >/dev/null 2>&1
+    git clone https://github.com/youngyangyang04/PowerVim.git >/dev/null 2>&1
+    cd PowerVim  
+    sh install.sh >/dev/null 2>&1
     echo -e "正在配置curl"
     curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
     echo -e "正在配置wget"
