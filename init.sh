@@ -49,7 +49,7 @@ install_zsh() {
 
 
 # 系统配置
-system_config() {
+base_config() {
     echo -e "apt install ag ..."
     apt install -y silversearcher-ag >/dev/null 2>&1
     ulimit -n 10240
@@ -230,7 +230,7 @@ dev_config() {
 }
 
 # 网安配置
-install_hacker() {
+hacker_config() {
     echo -e "正在安装 nmap ..."
     apt install -y nmap >/dev/null 2>&1
     echo -e "正在安装 netcat ..."
@@ -332,26 +332,32 @@ install_hacker() {
 
 }
 
+CUR_USER=$(whoami)
+if [ $CUR_USER != 'root' ]
+then
+    echo "请切换到root用户再执行该脚本"
+fi
+
 if [ $LEVEL = 'base' ] 
 then
-    system_config
+    base_config
 fi
 
 if [ $LEVEL = 'dev' ]
 then
-    system_config
+    base_config
     dev_config
 fi
 
 if [ $LEVEL = 'hacker' ] 
 then
-    install_hacker
+    hacker_config
 fi
 
 if [ $LEVEL = 'full'  ]
 then
-    system_config
+    base_config
     dev_config
-    install_hacker
+    hacker_config
 fi
 
