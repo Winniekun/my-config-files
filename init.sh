@@ -22,7 +22,7 @@ echo -e "\n"
 #       hacker: 常见的网络安全工具（sqlmap、nmap、httpx、xray等）
 #       full: 一把梭哈
 LEVEL='full'
-
+CUR_PATH=$(pwd)
 # zsh & oh-my-zsh安装
 install_zsh() {
     apt install -y zsh >/dev/null 2>&1
@@ -47,6 +47,12 @@ install_zsh() {
     source ~/.zshrc 
 }
 
+# Vim 安装 
+install_vim() {
+    git clone https://github.com/youngyangyang04/PowerVim.git
+    VIM_PATH=$CUR_PATH/PowerVim
+    sh $VIM_PATH/install.sh
+}
 
 # 系统配置
 base_config() {
@@ -101,9 +107,7 @@ base_config() {
     
     # vim/cur/wget配置
     echo -e "正在配置vim"
-    git clone https://github.com/youngyangyang04/PowerVim.git >/dev/null 2>&1
-    cd PowerVim  
-    sh install.sh >/dev/null 2>&1
+    install_vim
     echo -e "正在配置curl"
     curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
     echo -e "正在配置wget"
