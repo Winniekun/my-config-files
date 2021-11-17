@@ -21,37 +21,86 @@ echo -e "\n"
 #       dev: 开发环境配置（Java、Go、Kafka、MySQL、Redis等）
 #       hacker: 常见的网络安全工具（sqlmap、nmap、httpx、xray等）
 #       full: 一把梭哈
+
 LEVEL='full'
 CUR_PATH=$(pwd)
+
 # zsh & oh-my-zsh安装
-install_zsh() {
-    apt install -y zsh >/dev/null 2>&1
+config_zsh() {
+    if command -v zsh >/dev/null 2>&1
+    then
+        echo -e "检测到zsh 已安装"
+    else 
+    	apt install -y zsh >/dev/null 2>&1
+    fi	
     echo -e "开始配置oh-my-zsh"
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    if [ -d $HOME/.oh-my-zsh/ ]
+    then
+        test
+    else
+        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    fi
+
     chsh -s /bin/zsh
+    echo -e "shell切换为zsh"
     sed -i 's@ZSH_THEME="robbyrussell"@ZSH_THEME="awesomepanda"@g' ~/.zshrc 
     sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
     {
-        echo 'alias cat="/usr/bin/bat"' # 使用bat替代cat
-        echo 'alias myip="curl ifconfig.io/ip"'
+	    # 使用bat替代cat 
+        echo 'alias cat="/usr/bin/batcat"'
+    	echo 'alias myip="curl ifconfig.io/ip"'
         echo 'alias c=clear'
-    } >> ~/.zshrc 
-    echo -e "下载安装zsh-syntax-highlighting"
-    git clone git://github.com/zsh-users/zsh-syntax-highlighting $ZSH_CUSTOM/plugins/zsh-syntax-highlighting >/dev/null 2>&1
+    } >> ~/.zshrc
+    echo -e "下载安装zsh-highlighting"
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     echo -e "下载安装zsh-autosuggestions"
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions >/dev/null 2>&1
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     echo -e "下载安装autojump"
-    apt install -y autojump
-
+    apt install -y autojump >/dev/null 2>&1
+    # 声明终端类型
+    echo "export TERM=xterm-256color" >> ~/.zshrc	
+    # 设置建议命令的颜色
+    echo "ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc	
     # 重载配置
     source ~/.zshrc 
 }
 
 # Vim 安装 & 配置
 install_vim() {
-    git clone https://github.com/youngyangyang04/PowerVim.git
+    if [ ! -d "/PowerVim" ] 
+    then	    
+    	git clone https://github.com/youngyangyang04/PowerVim.git
+    fi
     VIM_PATH=$CUR_PATH/PowerVim
-    sh $VIM_PATH/install.sh
+    cd $VIM_PATH && sh install.sh
+    # 一些问题修复 （语言问题、ctag等）
+    fix_powervim
+
+}
+# PowerVim的一些小问题修复
+fix_powervim() {
+	# 系统中添加中文包
+	echo -e "修复PowerVim一些小问题ing"
+	apt install -y language-pack-zh-hans >/dev/null 2>&1 	
+	LOCAL_FILE=/var/lib/locales/supported.d/local
+	if [ ! -e $LOCAL_FILE ]
+	then
+     	     test
+	else 
+              rm $LOCAL_FILE	
+	fi		
+	{
+	    echo "en_US.UTF-8 UTF-8"
+	    echo "zh_CN.UTF-8 UTF-8"
+	    echo "zh_CN.GBK GBK"
+	    echo "zh_CN GB2312"
+	} >> /var/lib/locales/supported.d/local
+	sudo locale-gen >/dev/null 2>&1
+	{
+	    echo 'let Tlist_Show_One_File=1 "不同时显示多个文件的tag，只显示当前文件的'
+	    echo 'let Tlist_Exit_OnlyWindow=1 "如果taglist窗口是最后一个窗口，则退出vim'
+	    echo 'let Tlist_Ctags_Cmd="/usr/bin/ctags" "将taglist与ctags关联'
+	} >> ~/.vimrc
 }
 
 # Git 安装 & 配置
@@ -67,6 +116,7 @@ intall_git() {
         # 配置
         echo -e "开始Git配置"
         config_git
+    fi
 }
 # git相关的配置
 config_git() {
@@ -121,17 +171,14 @@ install_java() {
         test 
     else 
         echo -e "手动配置Java环境"
-        if [ ! -d "jdk-11_linux-x64_bin.tar.gz" ]
+        if [ ! -d "/jdk-11_linux-x64_bin.tar.gz" ]
         then
             wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
-            tar -xzvf jdk-11_linux-x64_bin.tar.gz
-            mv jdk-11_linux-x64_bin /opt/jdk11
-        else
-            test
-        echo "export JAVA_HOME=/opt/jdk11" >> ~/.zshrc 
-        echo "export PATH-${JAVA_HOME}/bin:$PATH" >> ~/.zshrc 
-        source ~/.zshrc 
-
+        fi
+        tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt
+        echo "export JAVA_HOME=/opt/jdk-11" >> /etc/zsh/zprofile 
+        echo "export PATH=${JAVA_HOME}/bin:$PATH" >> /etc/zsh/zprofile 
+        source /etc/zsh/zprofile
     fi
 }
 
@@ -174,6 +221,7 @@ base_config() {
         "which git"
         "which curl"
         "which wget"
+	"which bat"
     )
     for prog in "${cmdline[@]}"; do
         soft=$($prog)
@@ -186,23 +234,19 @@ base_config() {
         fi
     done
     
-    # vim/cur/wget配置
+    # git/vim/zsh/cur/wget配置
+    echo -e "正在配置git"
+    config_git
     echo -e "正在配置vim"
     install_vim
+    echo -e "正在配置zsh"
+    cd $CUR_PATH
+    config_zsh
     echo -e "正在配置curl"
-    curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
+    #curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
     echo -e "正在配置wget"
-    curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.wgetrc >~/.wgetrc >/dev/null 2>&1
-    echo -e "正在配置Git"
-    config_git
-    if command -v zsh >/dev/null 2>&1
-    then
-        echo -e "检测到zsh 已安装，将跳过！ "
-    else
-        echo -e "zsh 安装中..."
-        install_zsh
-    fi
-
+    #curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.wgetrc >~/.wgetrc >/dev/null 2>&1
+    
 }
 
 #  开发环境配置
@@ -272,8 +316,8 @@ dev_config() {
         echo -e "开始安装Nodejs"
         curl -fsSL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
         apt install -y nodejs >/dev/null 2>&1
-
     fi 
+    # TODO Redis、MySQL
 }
 
 # 网安配置
@@ -388,12 +432,14 @@ fi
 if [ $LEVEL = 'base' ] 
 then
     base_config
+    chsh -s /bin/zsh 
 fi
 
 if [ $LEVEL = 'dev' ]
 then
     base_config
     dev_config
+    chsh -s /bin/zsh
 fi
 
 if [ $LEVEL = 'hacker' ] 
@@ -406,5 +452,6 @@ then
     base_config
     dev_config
     hacker_config
+    chsh -s /bin/zsh
 fi
 
