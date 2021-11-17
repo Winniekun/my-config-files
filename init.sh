@@ -40,9 +40,7 @@ config_zsh() {
     else
         sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
     fi
-
-    chsh -s /bin/zsh
-    echo -e "shell切换为zsh"
+    
     sed -i 's@ZSH_THEME="robbyrussell"@ZSH_THEME="awesomepanda"@g' ~/.zshrc 
     sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
     {
@@ -55,12 +53,12 @@ config_zsh() {
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     echo -e "下载安装zsh-autosuggestions"
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    echo -e "下载安装autojump"
-    apt install -y autojump >/dev/null 2>&1
     # 声明终端类型
     echo "export TERM=xterm-256color" >> ~/.zshrc	
     # 设置建议命令的颜色
     echo "ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc	
+    chsh -s $(which zsh)
+    echo -e "shell切换为zsh"
     # 重载配置
     source ~/.zshrc 
 }
@@ -70,12 +68,13 @@ install_vim() {
     if [ ! -d "/PowerVim" ] 
     then	    
     	git clone https://github.com/youngyangyang04/PowerVim.git
+    else
+    	VIM_PATH=$CUR_PATH/PowerVim
+    	cd $VIM_PATH && sh install.sh
+    	# 一些问题修复 （语言问题、ctag等）
+    	fix_powervim
     fi
-    VIM_PATH=$CUR_PATH/PowerVim
-    cd $VIM_PATH && sh install.sh
-    # 一些问题修复 （语言问题、ctag等）
-    fix_powervim
-
+    cd $CUR_PATH
 }
 # PowerVim的一些小问题修复
 fix_powervim() {
@@ -85,17 +84,16 @@ fix_powervim() {
 	LOCAL_FILE=/var/lib/locales/supported.d/local
 	if [ ! -e $LOCAL_FILE ]
 	then
-     	     test
+     	     {
+	    	echo "en_US.UTF-8 UTF-8"
+	    	echo "zh_CN.UTF-8 UTF-8"
+	    	echo "zh_CN.GBK GBK"
+	    	echo "zh_CN GB2312"
+	      } >> /var/lib/locales/supported.d/local
 	else 
               rm $LOCAL_FILE	
 	fi		
-	{
-	    echo "en_US.UTF-8 UTF-8"
-	    echo "zh_CN.UTF-8 UTF-8"
-	    echo "zh_CN.GBK GBK"
-	    echo "zh_CN GB2312"
-	} >> /var/lib/locales/supported.d/local
-	sudo locale-gen >/dev/null 2>&1
+        sudo locale-gen >/dev/null 2>&1
 	{
 	    echo 'let Tlist_Show_One_File=1 "不同时显示多个文件的tag，只显示当前文件的'
 	    echo 'let Tlist_Exit_OnlyWindow=1 "如果taglist窗口是最后一个窗口，则退出vim'
@@ -141,7 +139,12 @@ config_git() {
 
 # python3 配置
 install_python3() {
-    mkdir ~/.pip/
+    if [ -d $HOME/.pip ]
+    then
+       echo -e "$HOME/.pip 已经创建"
+    else
+        mkdir ~/.pip/
+    fi
     echo -e "[global]\n" >~/.pip/pip.conf
     # 替换PIP源 速度更快
     echo -e "index-url = https://pypi.tuna.tsinghua.edu.cn/simple" >>~/.pip/pip.conf
@@ -158,27 +161,29 @@ install_python3() {
     pip3 install chardet >/dev/null 2>&1
     pip3 install supervisor >/dev/null 2>&1
     pip3 install python-dateutil >/dev/null 2>&1
-    pip3 install requests >dev/null 2>&1
+    pip3 install requests >/dev/null 2>&1
 }
 
 
 # Java 配置
 install_java() {
     echo -e "开始配置Java环境"
-    if command -v java >dev/null 2>&1 
+    if command -v java >/dev/null 2>&1 
     then
         # 已经配置，不做操作
+        echo -e "Java环境已经配置，即将跳过"
         test 
     else 
         echo -e "手动配置Java环境"
-        if [ ! -d "/jdk-11_linux-x64_bin.tar.gz" ]
+        if [ ! -e "jdk-11_linux-x64_bin.tar.gz" ]
         then
             wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
         fi
-        tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt
+        tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt >/dev/null 2>&1
         echo "export JAVA_HOME=/opt/jdk-11" >> /etc/zsh/zprofile 
         echo "export PATH=${JAVA_HOME}/bin:$PATH" >> /etc/zsh/zprofile 
         source /etc/zsh/zprofile
+        echo -e "Java环境配置完成"
     fi
 }
 
@@ -221,7 +226,8 @@ base_config() {
         "which git"
         "which curl"
         "which wget"
-	"which bat"
+    	"which bat"
+        "which autojump"
     )
     for prog in "${cmdline[@]}"; do
         soft=$($prog)
@@ -454,4 +460,4 @@ then
     hacker_config
     chsh -s /bin/zsh
 fi
-
+echo -e "环境全部配置完成，开始玩儿吧"
