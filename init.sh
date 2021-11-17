@@ -122,7 +122,7 @@ intall_git() {
 config_git() {
     # 用户信息
     git config --global user.name "weikunkun"
-    git config --global user.emai "kongwiki@163.com"
+    git config --global user.email "kongwiki@163.com"
     # core
     git config --global core.editor vim   
     # color
