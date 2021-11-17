@@ -47,11 +47,92 @@ install_zsh() {
     source ~/.zshrc 
 }
 
-# Vim 安装 
+# Vim 安装 & 配置
 install_vim() {
     git clone https://github.com/youngyangyang04/PowerVim.git
     VIM_PATH=$CUR_PATH/PowerVim
     sh $VIM_PATH/install.sh
+}
+
+# Git 安装 & 配置
+intall_git() {
+    if command -v git >/dev/null 2>&1
+    then 
+        # 配置
+        echo -e "检测到已经安装Git，开始Git配置"
+        config_git
+    else
+        # 安装 
+        apt install -y git >/dev/null 2>&1
+        # 配置
+        echo -e "开始Git配置"
+        config_git
+}
+# git相关的配置
+config_git() {
+    # 用户信息
+    git config --global user.name "weikunkun"
+    git config --global user.emai "kongwiki@163.com"
+    # core
+    git config --global core.editor vim   
+    # color
+    git config --global color.ui true
+    git config --global color.status "auto"
+    git config --global color.branch "auto"
+    # merge
+    git config --global merge.tool "vimdiff"
+    # alias
+    git config --global alias.co "checkout"
+    git config --global alias.br "branch"  
+    git config --global alias.ci "commit"
+    git config --global alias.st "status"
+    git config --global alias.last "log -1 HEAD"
+}
+
+# python3 配置
+install_python3() {
+    mkdir ~/.pip/
+    echo -e "[global]\n" >~/.pip/pip.conf
+    # 替换PIP源 速度更快
+    echo -e "index-url = https://pypi.tuna.tsinghua.edu.cn/simple" >>~/.pip/pip.conf
+    echo -e "开始安装Python常见库"
+    pip3 install lxml >/dev/null 2>&1
+    pip3 install ipaddress >/dev/null 2>&1
+    pip3 install python-dateutil >/dev/null 2>&1
+    pip3 install apscheduler >/dev/null 2>&1
+    pip3 install mycli >/dev/null 2>&1
+    pip3 install aiohttp >/dev/null 2>&1
+    pip3 install datetime >/dev/null 2>&1
+    pip3 install timeit >/dev/null 2>&1
+    pip3 install docker-compose >/dev/null 2>&1
+    pip3 install chardet >/dev/null 2>&1
+    pip3 install supervisor >/dev/null 2>&1
+    pip3 install python-dateutil >/dev/null 2>&1
+    pip3 install requests >dev/null 2>&1
+}
+
+
+# Java 配置
+install_java() {
+    echo -e "开始配置Java环境"
+    if command -v java >dev/null 2>&1 
+    then
+        # 已经配置，不做操作
+        test 
+    else 
+        echo -e "手动配置Java环境"
+        if [ ! -d "jdk-11_linux-x64_bin.tar.gz" ]
+        then
+            wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
+            tar -xzvf jdk-11_linux-x64_bin.tar.gz
+            mv jdk-11_linux-x64_bin /opt/jdk11
+        else
+            test
+        echo "export JAVA_HOME=/opt/jdk11" >> ~/.zshrc 
+        echo "export PATH-${JAVA_HOME}/bin:$PATH" >> ~/.zshrc 
+        source ~/.zshrc 
+
+    fi
 }
 
 # 系统配置
@@ -112,6 +193,8 @@ base_config() {
     curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
     echo -e "正在配置wget"
     curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.wgetrc >~/.wgetrc >/dev/null 2>&1
+    echo -e "正在配置Git"
+    config_git
     if command -v zsh >/dev/null 2>&1
     then
         echo -e "检测到zsh 已安装，将跳过！ "
@@ -122,48 +205,6 @@ base_config() {
 
 }
 
-# python3 配置
-install_python3() {
-    mkdir ~/.pip/
-    echo -e "[global]\n" >~/.pip/pip.conf
-    # 替换PIP源 速度更快
-    echo -e "index-url = https://pypi.tuna.tsinghua.edu.cn/simple" >>~/.pip/pip.conf
-    echo -e "开始安装Python常见库"
-    pip3 install lxml >/dev/null 2>&1
-    pip3 install ipaddress >/dev/null 2>&1
-    pip3 install python-dateutil >/dev/null 2>&1
-    pip3 install apscheduler >/dev/null 2>&1
-    pip3 install mycli >/dev/null 2>&1
-    pip3 install aiohttp >/dev/null 2>&1
-    pip3 install datetime >/dev/null 2>&1
-    pip3 install timeit >/dev/null 2>&1
-    pip3 install docker-compose >/dev/null 2>&1
-    pip3 install chardet >/dev/null 2>&1
-    pip3 install supervisor >/dev/null 2>&1
-    pip3 install python-dateutil >/dev/null 2>&1
-    pip3 install requests >dev/null 2>&1
-}
-
-
-# Java 配置
-install_java() {
-    echo -e "开始配置Java环境"
-    if command -v java >dev/null 2>&1 
-    then
-        # 已经配置，不做操作
-        test 
-    else 
-        echo -e "手动配置Java环境"
-        wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
-        tar -xzvf jdk-11_linux-x64_bin
-        mv jdk-11_linux-x64_bin /opt/jdk11
-        echo "export JAVA_HOME=/opt/jdk11" >> ~/.zshrc 
-        echo "export PATH-${JAVA_HOME}/bin:$PATH" >> ~/.zshrc 
-        source ~/.zshrc 
-
-    fi
-}
- 
 #  开发环境配置
 dev_config() {
     # 常见库配置
