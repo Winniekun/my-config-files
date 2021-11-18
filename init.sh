@@ -31,74 +31,107 @@ config_zsh() {
     then
         echo -e "检测到zsh 已安装"
     else 
-    	apt install -y zsh >/dev/null 2>&1
+        apt install -y zsh >/dev/null 2>&1
     fi	
-    echo -e "开始配置oh-my-zsh"
-    if [ -d $HOME/.oh-my-zsh/ ]
-    then
-        test
-    else
-        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    fi
-    
+    # install_ohmyzsh
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    # sh -c "$(wget -O- https://pastebin.com/raw/FAFw08G6)"  
+    echo -e "shell切换为zsh"
+    chsh -s $(which zsh)
+    # 设置主题，新增插件
     sed -i 's@ZSH_THEME="robbyrussell"@ZSH_THEME="awesomepanda"@g' ~/.zshrc 
     sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
     {
-	    # 使用bat替代cat 
+        # 使用bat替代cat 
         echo 'alias cat="/usr/bin/batcat"'
-    	echo 'alias myip="curl ifconfig.io/ip"'
+        echo 'alias myip="curl ifconfig.io/ip"'
         echo 'alias c=clear'
     } >> ~/.zshrc
-    echo -e "下载安装zsh-highlighting"
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    echo -e "下载安装zsh-autosuggestions"
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+    if [ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" ]
+    then
+        echo -e "zsh-highlighting 已经安装"
+    else
+        echo -e "下载安装zsh-highlighting"
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    fi
+
+    if [ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]
+    then
+        echo -e "zsh-autosuggestions 已经安装"
+    else
+        echo -e "下载安装zsh-autosuggestions"
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+    fi
+
     # 声明终端类型
     echo "export TERM=xterm-256color" >> ~/.zshrc	
     # 设置建议命令的颜色
-    echo "ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc	
-    chsh -s $(which zsh)
-    echo -e "shell切换为zsh"
+    echo ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc	 
     # 重载配置
     source ~/.zshrc 
 }
 
+# oh-my-zsh安装
+install_ohmyzsh() {
+    echo -e "开始配置oh-my-zsh"
+    if [ -d "$HOME/.oh-my-zsh/" ]
+    then
+        test
+    fi
+    if [ -e "install.sh" ] 
+    then
+        rm install.sh
+    fi	
+    
+     wget -O install.sh https://pastebin.com/raw/FAFw08G6           
+    sed -i 's@REPO=${REPO:-ohmyzsh/ohmyzsh}@REPO=${REPO:-mirrors/oh-my-zsh}@g' install.sh
+    sed -i 's@REMOTE=${REMOTE:-https://github.com/${REPO}.git}@REMOTE=${REMOTE:-https://gitee.com/${REPO}.git}@g' install.sh
+    
+    sh install.sh
+}
+
 # Vim 安装 & 配置
 install_vim() {
-    if [ ! -d "/PowerVim" ] 
+    if [ ! -d "$CUR_PATH/PowerVim" ] 
     then	    
-    	git clone https://github.com/youngyangyang04/PowerVim.git
+        git clone https://github.com/youngyangyang04/PowerVim.git
     else
-    	VIM_PATH=$CUR_PATH/PowerVim
-    	cd $VIM_PATH && sh install.sh
-    	# 一些问题修复 （语言问题、ctag等）
-    	fix_powervim
+        VIM_PATH=$CUR_PATH/PowerVim
+        cd $VIM_PATH && sh install.sh
+        # 一些问题修复 （语言问题、ctag等）
+        fix_powervim
     fi
     cd $CUR_PATH
 }
 # PowerVim的一些小问题修复
 fix_powervim() {
-	# 系统中添加中文包
-	echo -e "修复PowerVim一些小问题ing"
-	apt install -y language-pack-zh-hans >/dev/null 2>&1 	
-	LOCAL_FILE=/var/lib/locales/supported.d/local
-	if [ ! -e $LOCAL_FILE ]
-	then
-     	     {
-	    	echo "en_US.UTF-8 UTF-8"
-	    	echo "zh_CN.UTF-8 UTF-8"
-	    	echo "zh_CN.GBK GBK"
-	    	echo "zh_CN GB2312"
-	      } >> /var/lib/locales/supported.d/local
-	else 
-              rm $LOCAL_FILE	
-	fi		
-        sudo locale-gen >/dev/null 2>&1
-	{
-	    echo 'let Tlist_Show_One_File=1 "不同时显示多个文件的tag，只显示当前文件的'
-	    echo 'let Tlist_Exit_OnlyWindow=1 "如果taglist窗口是最后一个窗口，则退出vim'
-	    echo 'let Tlist_Ctags_Cmd="/usr/bin/ctags" "将taglist与ctags关联'
-	} >> ~/.vimrc
+    # 系统中添加中文包
+    echo -e "修复PowerVim一些小问题ing"
+    LOCAL_FILE=/var/lib/locales/supported.d/local
+    if [ ! -e "$LOCAL_FILE" ]
+    then
+        echo -e "创建 $LOCAL_FILE"
+        touch $LOCAL_FILE	
+    else 
+        rm $LOCAL_FILE
+    fi
+    {
+        echo "en_US.UTF-8 UTF-8"
+        echo "zh_CN.UTF-8 UTF-8"
+        echo "zh_CN.GBK GBK"
+        echo "zh_CN GB2312"
+    } >> $LOCAL_FILE
+
+sudo locale-gen
+
+{
+    echo 'let Tlist_Show_One_File=1 "不同时显示多个文件的tag，只显示当前文件的'
+    echo 'let Tlist_Exit_OnlyWindow=1 "如果taglist窗口是最后一个窗口，则退出vim'
+    echo 'let Tlist_Ctags_Cmd="/usr/bin/ctags" "将taglist与ctags关联'
+} >> ~/.vimrc
+
+echo -e "修复成功"
 }
 
 # Git 安装 & 配置
@@ -139,9 +172,9 @@ config_git() {
 
 # python3 配置
 install_python3() {
-    if [ -d $HOME/.pip ]
+    if [ -d "$HOME/.pip" ]
     then
-       echo -e "$HOME/.pip 已经创建"
+        echo -e "$HOME/.pip 已经创建"
     else
         mkdir ~/.pip/
     fi
@@ -191,6 +224,9 @@ install_java() {
 base_config() {
     echo -e "apt install ag ..."
     apt install -y silversearcher-ag >/dev/null 2>&1
+    echo -e "apt install zh-hans 语言库"
+    apt install -y language-pack-zh-hans >/dev/null 2>&1 	
+    sudo apt-get install fonts-droid-fallback ttf-wqy-zenhei ttf-wqy-microhei fonts-arphic-ukai fonts-arphic-uming >/dev/null 2>&1
     ulimit -n 10240
     echo -e "开始配置随机SSH 端口"
     SSH_PORT=$(cat /etc/ssh/sshd_config | ag -o '(?<=Port )\d+')
@@ -200,11 +236,11 @@ base_config() {
         echo -e "SSHD Port: ${SSH_NEW_PORT}" | tee -a ssh_port.txt
         sed -E -i "s/(Port|#\sPort|#Port)\s.{1,5}$/Port ${SSH_NEW_PORT}/g" /etc/ssh/sshd_config
     fi
-    
+
     # apt更新
     echo -e "apt update ..."
     apt update >/dev/null 2>&1
-    
+
     # 常用软件安装
     cmdline=(
         "which lsof"
@@ -226,7 +262,7 @@ base_config() {
         "which git"
         "which curl"
         "which wget"
-    	"which bat"
+        "which bat"
         "which autojump"
     )
     for prog in "${cmdline[@]}"; do
@@ -239,7 +275,7 @@ base_config() {
             echo -e "${name} 安装中......"
         fi
     done
-    
+
     # git/vim/zsh/cur/wget配置
     echo -e "正在配置git"
     config_git
@@ -252,7 +288,7 @@ base_config() {
     #curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.curlrc >~/.curlrc >/dev/null 2>&1
     echo -e "正在配置wget"
     #curl https://raw.githubusercontent.com/al0ne/vim-for-server/master/.wgetrc >~/.wgetrc >/dev/null 2>&1
-    
+
 }
 
 #  开发环境配置
@@ -294,7 +330,7 @@ dev_config() {
     apt-get install -y redis-cli >/dev/null 2>&1
     echo -e "apt-get install -y redis-server"
     apt-get install -y redis-server >/dev/null 2>&1
-    
+
     install_java
     install_python3
 
