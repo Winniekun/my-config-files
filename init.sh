@@ -359,7 +359,7 @@ dev_config() {
         curl -fsSL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
         apt install -y nodejs >/dev/null 2>&1
     fi 
-    # TODO Redis、MySQL
+    # TODO Redis、MySQL、Kafka
 }
 
 # 网安配置
@@ -496,4 +496,4 @@ then
     hacker_config
     chsh -s /bin/zsh
 fi
-echo -e "环境全部配置完成，开始玩儿吧"
+echo -e "环境全部配置完成, have fun"
