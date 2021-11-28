@@ -20,11 +20,13 @@ echo -e "\n"
 #       hacker: 常见的网络安全工具（sqlmap、nmap、httpx、xray等）
 #       full: 一把梭哈
 
-LEVEL='full'
+: ${LEVEL:='full'}
 CUR_PATH=$(pwd)
 
 # zsh & oh-my-zsh安装
 config_zsh() {
+    if command -v zsh >/dev/null 2>&1
+    then
         echo -e "检测到zsh 已安装"
     else
         apt install -y zsh >/dev/null 2>&1
@@ -66,20 +68,22 @@ config_zsh() {
 
 # oh-my-zsh安装
 install_ohmyzsh() {
-    echo -e "开始配置oh-my-zsh"
+    echo -e "开始安装oh-my-zsh"
     if [ -d "$HOME/.oh-my-zsh/" ]
     then
-        rm -r $HOME/.oh-my-zsh
+        echo -e "已经安装oh-my-zsh， 即将跳过"
+	test
     fi
     if [ -e "install.sh" ]
     then
         rm install.sh
+    	# 修改为国内镜像
+    	wget wget https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh
+    	sed -i 's@REPO=${REPO:-ohmyzsh/ohmyzsh}@REPO=${REPO:-mirrors/oh-my-zsh}@g' install.sh
+    	sed -i 's@REMOTE=${REMOTE:-https://github.com/${REPO}.git}@REMOTE=${REMOTE:-https://gitee.com/${REPO}.git}@g' install.sh
+    	sh install.sh
+    	cd $CUR_PATH
     fi
-    # 修改为国内镜像
-    wget wget https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh
-
-    sh install.sh
-    cd $CUR_PATH
 }
 
 # Vim 安装 & 配置
@@ -146,10 +150,13 @@ intall_git() {
         config_git
     fi
 }
+
 # git相关的配置
 config_git() {
     # 用户信息
-    git config --global user.name "weikunkun"
+    echo -e "（Git）请输入你的 username: \c"
+    read username
+    git config --global user.name "$username"
     git config --global core.editor vim
     # color
     git config --global color.ui true
@@ -165,6 +172,7 @@ config_git() {
     git config --global alias.last "log -1 HEAD"
 }
 
+# python3
 install_python3() {
     if [ -d "$HOME/.pip" ]
     then
@@ -174,6 +182,7 @@ install_python3() {
     fi
     echo -e "[global]\n" >~/.pip/pip.conf
     # 替换PIP源 速度更快
+    echo -e "index-url = https://pypi.tuna.tsinghua.edu.cn/simple" >>~/.pip/pip.conf
     echo -e "开始安装Python常见库"
     pip3 install lxml >/dev/null 2>&1
     pip3 install apscheduler >/dev/null 2>&1
@@ -196,11 +205,11 @@ install_java() {
     then
         # 已经配置，不做操作
         echo -e "Java环境已经配置，即将跳过"
-        test
     else
         echo -e "手动配置Java环境"
         if [ ! -e "/opt/jdk-11" ]
         then
+	    wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
             tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt >/dev/null 2>&1
         fi
         sed -i '/export JAVA_HOME=\/opt\/jdk-11/d' /etc/zsh/zprofile
@@ -210,6 +219,9 @@ install_java() {
         source /etc/zsh/zprofile
         echo -e "Java环境配置完成"
     fi
+
+}
+
 # Go安装与配置
 install_go() {
     if command -v go >/dev/null 2>&1
@@ -217,6 +229,7 @@ install_go() {
         echo -e "检测到已经安装Go 将跳过Go的安装"
     else
         if [ ! -e "/usr/local/go" ]; then
+		wget https://go.dev/dl/go1.17.3.linux-amd64.tar.gz
                 tar -zxvf go1.17.3.linux-amd64.tar.gz -C /usr/local
         fi
         echo -e "开始配置Go环境"
@@ -264,7 +277,7 @@ base_config() {
         "which sqlite3"
         "which lrzsz"
         "which curl"
-        "which autojump"
+	"which bat"
     )
     for prog in "${cmdline[@]}"; do
         soft=$($prog)
@@ -352,6 +365,7 @@ dev_config() {
 }
 
 # 网安配置
+hacker_config() {
     apt install -y nmap >/dev/null 2>&1
     echo -e "正在安装 netcat ..."
     apt install -y netcat >/dev/null 2>&1
@@ -380,33 +394,36 @@ dev_config() {
     if [ -d "/opt/dirsearch" ]; then
         echo -e "检测到dirsearch已安装将跳过"
     else
+        echo -e "正在克隆 dirsearch ..."
+        cd /opt && git clone https://github.com/shmilylty/OneForAll.git >/dev/null 2>&1
     fi
     # 安装 httpx
     if command -v httpx >/dev/null 2>&1; then
         echo -e "检测到已安装httpx 将跳过！"
     else
         echo -e "开始安装Httpx"
-
+        GO111MODULE=on go get -u -v github.com/projectdiscovery/httpx/cmd/httpx >/dev/null 2>&1
     fi
     # 安装 subfinder
     if command -v subfinder >/dev/null 2>&1; then
         echo -e "检测到已安装subfinder 将跳过！"
     else
         echo -e "开始安装subfinder"
-
+        GO111MODULE=on go get -u -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder >/dev/null 2>&1
     fi
     # 安装 nuclei
     if command -v nuclei >/dev/null 2>&1; then
         echo -e "检测到已安装nuclei 将跳过！"
     else
         echo -e "开始安装nuclei"
-
+        GO111MODULE=on go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei >/dev/null 2>&1
     fi
     # 安装 naabu
     if command -v naabu >/dev/null 2>&1; then
         echo -e "检测到已安装 naabu 将跳过！"
     else
         echo -e "开始安装 naabu"
+        GO111MODULE=on go get -u -v github.com/projectdiscovery/naabu/v2/cmd/naabu >/dev/null 2>&1
 
     fi
     # 安装 dnsx
@@ -414,7 +431,7 @@ dev_config() {
         echo -e "检测到已安装 dnsx 将跳过！"
     else
         echo -e "开始安装 dnsx"
-
+        GO111MODULE=on go get -u -v github.com/projectdiscovery/dnsx/cmd/dnsx >/dev/null 2>&1
     fi
     # 安装 subjack
     if command -v subjack >/dev/null 2>&1; then
@@ -432,8 +449,8 @@ dev_config() {
         go get -u github.com/ffuf/ffuf >/dev/null 2>&1
 
     fi
-
 }
+
 
 CUR_USER=$(whoami)
 if [ $CUR_USER != 'root' ]
