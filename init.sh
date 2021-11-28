@@ -67,7 +67,7 @@ config_zsh() {
     # 声明终端类型
     echo "export TERM=xterm-256color" >> ~/.zshrc	
     # 设置建议命令的颜色
-    echo ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc	 
+    echo ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc 	 
     # 重载配置
     source ~/.zshrc 
 }
@@ -208,16 +208,32 @@ install_java() {
         test 
     else 
         echo -e "手动配置Java环境"
-        if [ ! -e "jdk-11_linux-x64_bin.tar.gz" ]
+        if [ ! -e "/opt/jdk-11" ]
         then
             wget https://repo.huaweicloud.com/java/jdk/11+28/jdk-11_linux-x64_bin.tar.gz
+            tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt >/dev/null 2>&1
         fi
-        tar -xzvf jdk-11_linux-x64_bin.tar.gz -C /opt >/dev/null 2>&1
+        sed -i '/export JAVA_HOME=\/opt\/jdk-11/d' /etc/zsh/zprofile
+        sed -i '/export PATH=${JAVA_HOME}\/bin:$PATH' /etc/zsh/zprofile
         echo "export JAVA_HOME=/opt/jdk-11" >> /etc/zsh/zprofile 
         echo "export PATH=${JAVA_HOME}/bin:$PATH" >> /etc/zsh/zprofile 
         source /etc/zsh/zprofile
         echo -e "Java环境配置完成"
     fi
+}
+
+# Go安装与配置
+install_go() {
+    if [ ! -e "/usr/local/go" ]; then
+        echo -e "Go文件还未下载，开始下载"
+        wget https://go.dev/dl/go1.17.3.linux-amd64.tar.gz
+        tar -zxvf go1.17.3.linux-amd64.tar.gz -C /usr/local
+    fi
+    echo -e "开始配置Go环境"
+    sed -i '/export PATH=\/usr\/local\/go\/bin:$PATH/d' /etc/zsh/zprofile
+    echo 'export PATH=/usr/local/go/bin:$PATH' >> /etc/zsh/zprofile
+    echo -e "刷新配置文件"
+    source /etc/zsh/zprofile
 }
 
 # 系统配置
