@@ -33,10 +33,12 @@ config_zsh() {
     fi
 
     install_ohmyzsh
-
+    chsh -s $(which zsh)
     # 设置主题，新增插件
     sed -i 's@ZSH_THEME="robbyrussell"@ZSH_THEME="awesomepanda"@g' ~/.zshrc
-    {
+    sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
+   
+   {
         # 使用bat替代cat
         echo 'alias cat="/usr/bin/batcat"'
         echo 'alias myip="curl ifconfig.io/ip"'
@@ -48,6 +50,7 @@ config_zsh() {
         echo -e "zsh-highlighting 已经安装"
     else
         echo -e "下载安装zsh-highlighting"
+ 	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
     fi
 
     if [ -d "$HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions" ]
@@ -55,6 +58,7 @@ config_zsh() {
         echo -e "zsh-autosuggestions 已经安装"
     else
         echo -e "下载安装zsh-autosuggestions"
+    	git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
     fi
     sed -i '/export TERM=xterm-256color/d' ~/.zshrc
     sed -i '/ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE/d' ~/.zshrc
