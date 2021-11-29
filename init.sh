@@ -20,7 +20,7 @@ echo -e "\n"
 #       hacker: 常见的网络安全工具（sqlmap、nmap、httpx、xray等）
 #       full: 一把梭哈
 
-: ${LEVEL:='full'}
+: ${LEVEL:='dev'}
 CUR_PATH=$(pwd)
 
 # zsh & oh-my-zsh安装
@@ -31,9 +31,13 @@ config_zsh() {
     else
         apt install -y zsh >/dev/null 2>&1
     fi
-
-    install_ohmyzsh
+    if [ ! -d "$HOME/.oh-my-zsh/" ]
+    then
+        echo -e "开始安装oh-my-zsh"
+	install_ohmyzsh
+    fi
     chsh -s $(which zsh)
+    echo -e "开始配置oh-my-zsh"
     # 设置主题，新增插件
     sed -i 's@ZSH_THEME="robbyrussell"@ZSH_THEME="awesomepanda"@g' ~/.zshrc
     sed -i 's@plugins=(.*)@plugins=(git extract zsh-syntax-highlighting autojump zsh-autosuggestions)@g' ~/.zshrc
@@ -67,17 +71,13 @@ config_zsh() {
     # 设置建议命令的颜色
     echo "ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=10'" >> ~/.zshrc
     # 重载配置
+    zsh
     source ~/.zshrc
 }
 
 # oh-my-zsh安装
 install_ohmyzsh() {
     echo -e "开始安装oh-my-zsh"
-    if [ -d "$HOME/.oh-my-zsh/" ]
-    then
-        echo -e "已经安装oh-my-zsh， 即将跳过"
-	test
-    fi
     if [ -e "install.sh" ]
     then
         rm install.sh
@@ -88,6 +88,7 @@ install_ohmyzsh() {
     	sh install.sh
     	cd $CUR_PATH
     fi
+    echo -e "oh-my-zsh安装成功，请重新执行init.sh"
 }
 
 # Vim 安装 & 配置
@@ -302,9 +303,6 @@ base_config() {
     echo -e "正在配置zsh"
     cd $CUR_PATH
     config_zsh
-    echo -e "正在配置curl"
-    echo -e "正在配置wget"
-
 }
 
 #  开发环境配置
@@ -455,7 +453,6 @@ hacker_config() {
     fi
 }
 
-
 CUR_USER=$(whoami)
 if [ $CUR_USER != 'root' ]
 then
@@ -465,14 +462,12 @@ fi
 if [ $LEVEL = 'base' ]
 then
     base_config
-    chsh -s /bin/zsh
 fi
 
 if [ $LEVEL = 'dev' ]
 then
-    base_config
+    # base_config
     dev_config
-    chsh -s /bin/zsh
 fi
 
 if [ $LEVEL = 'hacker' ]
@@ -485,6 +480,5 @@ then
     base_config
     dev_config
     hacker_config
-    chsh -s /bin/zsh
 fi
 echo -e "环境全部配置完成, have fun"
