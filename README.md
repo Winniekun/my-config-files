@@ -7,7 +7,7 @@ cd my-config-files
 ./init.sh
 ```
 
->还在完善中，有些交互和配置还有一些问题，谨慎运行:happy:
+>**ps:** 还在完善中，有些交互和配置还有一些问题，谨慎运行 :grinning:
 
 - [x] vim
 - [x] zsh
